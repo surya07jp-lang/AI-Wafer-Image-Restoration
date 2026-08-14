@@ -1,0 +1,7 @@
+{
+    "model": "Residual CNN V1",
+    "PSNR": 27.75021,
+    "SSIM": 0.7269622,
+    "bicubic_PSNR_gain": 4.2374725,
+    "bicubic_SSIM_gain": 0.18962371
+}

@@ -1,0 +1,11 @@
+{
+    "model": "Residual CNN",
+    "input": "128x128 NoisyLR",
+    "output": "256x256 GT",
+    "loss": "L1",
+    "validation_images": 320,
+    "PSNR": 27.75021,
+    "SSIM": 0.7269622,
+    "bicubic_PSNR": 23.512737,
+    "bicubic_SSIM": 0.5373385
+}
