@@ -1,31 +1,20 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
-
 import tensorflow as tf
 import numpy as np
-
 from PIL import Image
-
 import io
 import time
-
-
-# ============================================================
 # FASTAPI APP
-# ============================================================
-
 app = FastAPI(
     title="AI Wafer Image Restoration API",
     description="AI-based wafer image restoration using V3 model",
     version="1.0"
 )
 
-
-# ============================================================
 # CORS
 # Allows React/Vite frontend to communicate with FastAPI
-# ============================================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,10 +41,7 @@ app.add_middleware(
     ],
 )
 
-
-# ============================================================
 # LOAD AI MODEL
-# ============================================================
 
 MODEL_PATH = (
     r"C:\Users\User\Downloads\SEMICON-Hackathon-2026"
@@ -78,10 +64,7 @@ print("Output shape:", model.output_shape)
 print("Input dtype :", model.inputs[0].dtype)
 print("============================================================")
 
-
-# ============================================================
 # HOME
-# ============================================================
 
 @app.get("/")
 def home():
@@ -95,10 +78,7 @@ def home():
         "output_shape": str(model.output_shape)
     }
 
-
-# ============================================================
 # HEALTH CHECK
-# ============================================================
 
 @app.get("/health")
 def health():
@@ -112,10 +92,7 @@ def health():
         "output_shape": str(model.output_shape)
     }
 
-
-# ============================================================
 # RESTORE WAFER IMAGE
-# ============================================================
 
 @app.post("/restore")
 async def restore(file: UploadFile = File(...)):
@@ -128,21 +105,14 @@ async def restore(file: UploadFile = File(...)):
     print("Filename:", file.filename)
     print("Content type:", file.content_type)
 
-    # ========================================================
     # START TIMER
-    # ========================================================
 
     start_time = time.perf_counter()
-
-
-    # ========================================================
+    
     # READ UPLOADED IMAGE
-    # ========================================================
 
     image_bytes = await file.read()
-
     print("Uploaded bytes:", len(image_bytes))
-
     if len(image_bytes) == 0:
 
         return Response(
@@ -151,11 +121,8 @@ async def restore(file: UploadFile = File(...)):
             media_type="text/plain"
         )
 
-
-    # ========================================================
     # OPEN IMAGE
-    # ========================================================
-
+    
     try:
 
         image = Image.open(
@@ -176,9 +143,7 @@ async def restore(file: UploadFile = File(...)):
     print("Original image size:", image.size)
 
 
-    # ========================================================
     # RESIZE TO MODEL INPUT
-    # ========================================================
 
     image = image.resize(
         (128, 128),
@@ -188,9 +153,7 @@ async def restore(file: UploadFile = File(...)):
     print("Model input image size:", image.size)
 
 
-    # ========================================================
     # CONVERT IMAGE TO NUMPY
-    # ========================================================
 
     noisy = np.array(
         image,
@@ -211,13 +174,9 @@ async def restore(file: UploadFile = File(...)):
 
     # ========================================================
     # NORMALIZE PNG
-    #
     # Original PNG:
-    #
     # 0 → 255
-    #
     # Convert to:
-    #
     # 0.0 → 1.0
     # ========================================================
 
@@ -228,9 +187,7 @@ async def restore(file: UploadFile = File(...)):
 
     # ========================================================
     # CONVERT [0,1] → [-1,1]
-    #
     # IMPORTANT:
-    #
     # This preprocessing is restored from the previous
     # working version of the WAFERAI backend.
     #
@@ -257,13 +214,9 @@ async def restore(file: UploadFile = File(...)):
 
     # ========================================================
     # ADD BATCH + CHANNEL DIMENSIONS
-    #
     # Current:
-    #
     # (128,128)
-    #
     # Becomes:
-    #
     # (1,128,128,1)
     # ========================================================
 
@@ -283,9 +236,7 @@ async def restore(file: UploadFile = File(...)):
     print("Input dtype:", noisy.dtype)
 
 
-    # ========================================================
     # AI PREDICTION
-    # ========================================================
 
     prediction = model.predict(
         noisy,
@@ -302,29 +253,20 @@ async def restore(file: UploadFile = File(...)):
     print("Prediction dtype:", prediction.dtype)
 
 
-    # ========================================================
     # REMOVE BATCH + CHANNEL DIMENSIONS
-    #
     # (1,256,256,1)
-    #
     # becomes:
-    #
     # (256,256)
-    # ========================================================
 
     restored = prediction[0, ..., 0]
-
 
     print("Restored shape:", restored.shape)
     print("Restored min:", restored.min())
     print("Restored max:", restored.max())
 
 
-    # ========================================================
     # CLIP OUTPUT
-    #
     # Make sure output is valid [0,1]
-    # ========================================================
 
     restored = np.clip(
         restored,
@@ -333,18 +275,15 @@ async def restore(file: UploadFile = File(...)):
     )
 
 
-    # ========================================================
     # CONVERT [0,1] → [0,255]
-    # ========================================================
 
     restored_uint8 = (
         restored * 255.0
     ).astype(np.uint8)
 
 
-    # ========================================================
     # CREATE PIL IMAGE
-    # ========================================================
+
 
     output_image = Image.fromarray(
         restored_uint8,
@@ -356,9 +295,7 @@ async def restore(file: UploadFile = File(...)):
     print("Output image resolution:", output_image.size)
 
 
-    # ========================================================
     # CREATE PNG BUFFER
-    # ========================================================
 
     output_buffer = io.BytesIO()
 
@@ -370,9 +307,8 @@ async def restore(file: UploadFile = File(...)):
     output_bytes = output_buffer.getvalue()
 
 
-    # ========================================================
     # CALCULATE INFERENCE TIME
-    # ========================================================
+
 
     end_time = time.perf_counter()
 
@@ -385,9 +321,8 @@ async def restore(file: UploadFile = File(...)):
     )
 
 
-    # ========================================================
     # FINAL LOG
-    # ========================================================
+
 
     print()
     print("============================================================")
@@ -407,9 +342,7 @@ async def restore(file: UploadFile = File(...)):
     print()
 
 
-    # ========================================================
     # RETURN RESTORED IMAGE + METADATA
-    # ========================================================
 
     return Response(
 
