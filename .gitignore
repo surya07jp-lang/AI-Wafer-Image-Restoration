@@ -7,3 +7,23 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.zip
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Test/generated images
+test_images/
+
+# TensorFlow/Keras generated files
+*.h5
+
+# Local environment
+.env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Jupyter
+.ipynb_checkpoints/
